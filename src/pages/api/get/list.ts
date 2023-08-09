@@ -1,7 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import client from "@/venders"
 import { withDatabase } from '../database';
-import { CardDataMap } from '@/utils/constants'
 import { DataSource } from "typeorm/browser";
 import { Card } from '@/entity/card'
 

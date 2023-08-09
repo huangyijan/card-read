@@ -36,6 +36,8 @@ export class Card {
   en_position: string;
   @Column("text")
   others: string;
+  @Column("text")
+  url: string;
 
   constructor() {
     this.name = ''
@@ -53,5 +55,6 @@ export class Card {
     this.en_position = ''
     this.position = ''
     this.others = ''
+    this.url = ''
   }
 }

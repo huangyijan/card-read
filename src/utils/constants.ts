@@ -16,4 +16,5 @@ export const CardDataMap = new Map([
     ['英文地址', 'en_address'],
     ['英文职位', 'en_position'],
     ['其他', 'others'],
+    ['图片', 'url'],
   ])
