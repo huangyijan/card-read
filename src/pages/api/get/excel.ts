@@ -16,6 +16,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         if (item.en_position) item.position += ` ${item.en_position}`
         if (item.en_name) item.name += ` ${item.en_name}`
         if (item.mobile) item.phone += ` ${item.mobile}`
+        if(item.url) item.url = 'http://47.106.107.179:3001/' + item.url
         return { ...item }
       }).map(cardItem => {
         let obj = [] as any
@@ -27,7 +28,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const data = [columns.map(item => item.label), ...list ]
     const sheetOptions = {'!cols': [{wch: 6}, {wch: 7}, {wch: 10}, {wch: 20}]};
 
-    const buffer = xlsx.build([{ name: '名片识别表格', data }], {sheetOptions}); // Returns a buffer
+    const buffer = xlsx.build([{ name: '名片识别表格', data } as any], {sheetOptions}); // Returns a buffer
     
 
     res.status(200).send(Buffer.from(buffer));

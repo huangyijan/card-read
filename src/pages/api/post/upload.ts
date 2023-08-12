@@ -22,7 +22,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
           return res.status(400).json({ message: '文件上传失败', err: String(err) });
         }
     
-        const { filename } = req.file;
+        const { filename } = (<any>req).file;
         // 在这里可以进行一些其他的操作，例如将文件信息存储到数据库等
     
         return res.json({ message: '文件上传成功', filename });

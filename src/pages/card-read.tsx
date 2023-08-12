@@ -20,7 +20,7 @@ export default function CardPage({ list }) {
     fetch('/api/get/excel', {
       method: 'get',
       responseType: 'arraybuffer'
-    }).then(res => {
+    } as any).then(res => {
       return res.arrayBuffer();
     }).then(buffer => {
       console.log(buffer);
@@ -41,6 +41,7 @@ export default function CardPage({ list }) {
         if (item.en_position) item.position += ` ${item.en_position}`
         if (item.en_name) item.name += ` ${item.en_name}`
         if (item.mobile) item.phone += ` ${item.mobile}`
+        item.url = 'http://47.106.107.179:3001/'+ item.url.split('public/')[1]
         return { ...item }
       }))
     })
@@ -80,6 +81,8 @@ export default function CardPage({ list }) {
     fetch('/api/post/upload-formdata', {
       method: 'POST',
       body: formData,
+    }).then(res => {
+      fetchData()
     })
 
   }
@@ -193,7 +196,7 @@ export async function getStaticProps(context) {
     if (item.en_position) item.position += ` ${item.en_position}`
     if (item.en_name) item.name += ` ${item.en_name}`
     if (item.mobile) item.phone += ` ${item.mobile}`
-    item.url = 'http://localhost:3000/'+ item.url.split('public/')[1]
+    item.url = 'http://47.106.107.179:3001/'+ item.url.split('public/')[1]
     return { ...item }
   })
 
