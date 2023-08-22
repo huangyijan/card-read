@@ -2,12 +2,12 @@ import "reflect-metadata"
 import { DataSource } from "typeorm"
 import { Card } from "../../entity/card"
 
-const AppDataSource = new DataSource({
+export const AppDataSource = new DataSource({
     type: "mysql",
-    host: "localhost",
+    host: process.env.DB_HOST,
     port: 3306,
-    username: "card_read",
-    password: "jGeAwjMxxhXh8yxC",
+    username: process.env.DB_USER,
+    password: process.env.DB_PASS,
     database: "card_read",
     entities: [Card],
     synchronize: true,
