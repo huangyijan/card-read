@@ -1,4 +1,4 @@
-import { Button, Col, Input, Row, Table, Text, User, Tooltip, Progress } from '@nextui-org/react';
+import { Button, Col, Input, Row, Table, Text, User, Tooltip, Progress, Loading } from '@nextui-org/react';
 import React, { useState, useEffect, useRef } from 'react'
 import { connectToDatabase } from './api/database';
 import { Card } from '@/entity/card';
@@ -9,14 +9,14 @@ import { download } from '@/utils';
 
 
 export default function CardPage({ list }) {
-  let imageUrl = '/uploads/1690661855420.jpg'
   const [cards, setCards] = useState<any[]>(list)
   const uploadInput = useRef(null as any)
-  const [page, setPage] = React.useState(1);
+  const [loading, setLoading] = React.useState(false);
   const [progress, setProgress] = React.useState(0)
-  const pages = 100
 
   useEffect(() => {
+    console.log(list.length);
+
     handleUploadProgress()
   }, []);
 
@@ -88,10 +88,12 @@ export default function CardPage({ list }) {
     for (const file of files) {
       formData.append('files', file)
     }
+    setLoading(true)
     fetch('/api/post/upload-formdata', {
       method: 'POST',
       body: formData,
     }).then(res => {
+      setLoading(false)
       fetchData()
     })
 
@@ -156,7 +158,9 @@ export default function CardPage({ list }) {
       {progress ? <Progress value={progress} color="gradient" style={{ padding: '0 50' }} /> : ''}
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 30 }}>
         <Input ref={uploadInput} placeholder="Next UI" type="file" id="fileInput" multiple onChange={handleFileChange} style={{ display: 'none' }} />
-        <Button size="sm" className="flex-center mb-50" onPress={() => uploadInput.current?.click()}>上传名片</Button>
+        <Button size="sm" className="flex-center mb-50" onPress={() => uploadInput.current?.click()} disable={loading}>
+          {loading ? <Loading color="currentColor" size="xs" /> : '上传名片'}
+        </Button>
         <Button size="sm" className="flex-center mb-50" onPress={handleDownload} style={{ marginLeft: 50 }}>下载excel</Button>
         <Button size="sm" className="flex-center mb-50" onPress={test} style={{ marginLeft: 50 }}>测试按钮</Button>
       </div>
@@ -189,6 +193,7 @@ export default function CardPage({ list }) {
           shadow
           noMargin
           align="center"
+          total={Math.ceil(cards.length / 8)}
           rowsPerPage={8}
           onPageChange={(page) => console.log({ page })}
         />
@@ -202,9 +207,9 @@ export async function getStaticProps(context) {
   const db = await connectToDatabase()
   const res = await db.getRepository(Card).find({
     order: {
-        id: "DESC",
+      id: "DESC",
     },
-})
+  })
   const list = res.map(item => {
     if (item.en_apartment) item.apartment += ` ${item.en_apartment}`
     if (item.en_compony) item.compony += ` ${item.en_compony}`
