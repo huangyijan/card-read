@@ -1,4 +1,4 @@
-import { Button, Col, Input, Row, Table, Text, User, Tooltip } from '@nextui-org/react';
+import { Button, Col, Input, Row, Table, Text, User, Tooltip, Progress } from '@nextui-org/react';
 import React, { useState, useEffect, useRef } from 'react'
 import { connectToDatabase } from './api/database';
 import { Card } from '@/entity/card';
@@ -13,11 +13,33 @@ export default function CardPage({ list }) {
   const [cards, setCards] = useState<any[]>(list)
   const uploadInput = useRef(null as any)
   const [page, setPage] = React.useState(1);
+  const [progress, setProgress] = React.useState(0)
   const pages = 100
 
   useEffect(() => {
-    // ...
+    handleUploadProgress()
   }, []);
+
+  /** 获取上传进度 */
+  function handleUploadProgress() {
+    var source = new EventSource('/api/get/sse');
+    source.onopen = function (e) {
+      console.log("open")
+    };
+    source.onmessage = function (e) {
+      console.log(+e.data);
+      if (!Number.isNaN(Number(e.data))) setProgress(+e.data)
+    }
+
+    source.onerror = function (e) {
+      console.log("error")
+      source.close()
+    }
+  }
+
+  function test() {
+    fetch('api/get/test')
+  }
 
   function handleDownload() {
     fetch('/api/get/excel', {
@@ -47,42 +69,17 @@ export default function CardPage({ list }) {
     fetch('/api/get/list').then(res => {
       return res.json()
     }).then(res => {
+      setProgress(0)
       setCards(res.list.map(item => {
         if (item.en_apartment) item.apartment += ` ${item.en_apartment}`
         if (item.en_compony) item.compony += ` ${item.en_compony}`
         if (item.en_position) item.position += ` ${item.en_position}`
         if (item.en_name) item.name += ` ${item.en_name}`
         if (item.mobile) item.phone += ` ${item.mobile}`
-        item.url = 'http://47.106.107.179:3001/' + item.url.split('public/')[1]
+        item.url = process.env.HOST_URL || '' + item.url.split('public/')[1]
         return { ...item }
       }))
     })
-  }
-
-  function handlePaginationChange() { }
-
-
-  function handleUpload() {
-    const fileInput = document.getElementById('fileInput') as HTMLInputElement;
-
-    if (fileInput.files?.length === 0) {
-      alert('请先选择一个文件！');
-      return;
-    }
-
-    const file = fileInput.files?.[0] || '';
-    const formData = new FormData();
-    formData.append('file', file);
-
-    fetch('/api/post/upload', {
-      method: 'POST',
-      body: formData
-    })
-      .then(response => response.json())
-      .then(data => {
-        imageUrl = data.filename
-      })
-      .catch(error => console.error('Error:', error));
   }
 
   function handleFileChange(e) {
@@ -91,33 +88,11 @@ export default function CardPage({ list }) {
     for (const file of files) {
       formData.append('files', file)
     }
-    console.log(files);
     fetch('/api/post/upload-formdata', {
       method: 'POST',
       body: formData,
     }).then(res => {
       fetchData()
-    })
-
-  }
-
-
-  function uploadFile(file: File) {
-    return new Promise<void>(resolve => {
-      const reader = new FileReader();
-
-      reader.onload = function (event: any) {
-        const base64String = event.target.result.split(',')[1];
-        fetch('/api/post/upload-base64', {
-          method: 'POST',
-          body: base64String,
-        }).then(res => {
-          resolve()
-        })
-
-      };
-
-      reader.readAsDataURL(file);
     })
 
   }
@@ -130,7 +105,7 @@ export default function CardPage({ list }) {
         fetchData()
       })
     }
-  
+
     const cellValue = user[columnKey];
     switch (columnKey) {
       case "name":
@@ -160,9 +135,9 @@ export default function CardPage({ list }) {
         return (
           <Row justify="center" align="center">
             <Col css={{ d: "flex" }}>
-                <Button size="xs" color="error" light onClick={() => handleDelete(user)}>
-                  删除
-                </Button>
+              <Button size="xs" color="error" light onClick={() => handleDelete(user)}>
+                删除
+              </Button>
             </Col>
           </Row>
         );
@@ -178,13 +153,13 @@ export default function CardPage({ list }) {
 
   return (
     <div style={{ padding: 20 }}>
+      {progress ? <Progress value={progress} color="gradient" style={{ padding: '0 50' }} /> : ''}
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 30 }}>
         <Input ref={uploadInput} placeholder="Next UI" type="file" id="fileInput" multiple onChange={handleFileChange} style={{ display: 'none' }} />
-        <Button size="sm" className="flex-center mb-50" onClick={() => uploadInput.current?.click()}>上传名片</Button>
-        <Button size="sm" className="flex-center mb-50" onClick={handleDownload} style={{ marginLeft: 50 }}>下载excel</Button>
+        <Button size="sm" className="flex-center mb-50" onPress={() => uploadInput.current?.click()}>上传名片</Button>
+        <Button size="sm" className="flex-center mb-50" onPress={handleDownload} style={{ marginLeft: 50 }}>下载excel</Button>
+        <Button size="sm" className="flex-center mb-50" onPress={test} style={{ marginLeft: 50 }}>测试按钮</Button>
       </div>
-      {/* <Button className="flex-center" onClick={handleUpload}>上传名片</Button>
-      <Button className="flex-center" onClick={fetchData}>读取名片数据</Button> */}
       <Table
         striped
         sticked
@@ -225,14 +200,18 @@ export default function CardPage({ list }) {
 
 export async function getStaticProps(context) {
   const db = await connectToDatabase()
-  const res = await db.getRepository(Card).find()
+  const res = await db.getRepository(Card).find({
+    order: {
+        id: "DESC",
+    },
+})
   const list = res.map(item => {
     if (item.en_apartment) item.apartment += ` ${item.en_apartment}`
     if (item.en_compony) item.compony += ` ${item.en_compony}`
     if (item.en_position) item.position += ` ${item.en_position}`
     if (item.en_name) item.name += ` ${item.en_name}`
     if (item.mobile) item.phone += ` ${item.mobile}`
-    item.url = 'http://47.106.107.179:3001/' + item.url.split('public/')[1]
+    item.url = process.env.HOST_URL + item.url.split('public/')[1]
     return { ...item }
   })
 

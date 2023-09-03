@@ -5,7 +5,11 @@ import { Card } from '@/entity/card'
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
     const db = (<any>req).db as DataSource
-    const list = await db.getRepository(Card).find()
+    const list = await db.getRepository(Card).find({
+        order: {
+            id: "DESC",
+        },
+    })
     res.status(200).json({ msg: '保存成功', list });
 
 }
